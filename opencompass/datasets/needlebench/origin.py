@@ -204,6 +204,51 @@ class NeedleBenchOriginDataset(BaseDataset):
             'prompt': data['prompt'],
             'answer': data['answer'],
         })
+
+        ###############################################################
+        # ADD SAVING CODE HERE (only for English)
+        ###############################################################
+
+        if language == 'English':
+            print(f"Starting to save dataset with {len(dataset)} examples...")
+            
+            # Create base directory if it doesn't exist
+            base_dir = "/mnt/core_llm_large/jash/spam/needlebench_data"
+            os.makedirs(base_dir, exist_ok=True)
+            
+            # Define jsonl file path
+            jsonl_path = os.path.join(base_dir, "128k-S-RT-EN.jsonl")
+            
+            # Convert current dataset to list of dictionaries
+            new_data = dataset.to_dict()
+            new_records = [
+                {key: new_data[key][i] for key in new_data.keys()}
+                for i in range(len(dataset))
+            ]
+            
+            # If file exists, read and combine with existing data
+            if os.path.exists(jsonl_path):
+                print(f"Found existing file at {jsonl_path}")
+                existing_records = []
+                with open(jsonl_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        existing_records.append(json.loads(line.strip()))
+                print(f"Read {len(existing_records)} existing records")
+                
+                # Combine existing and new records
+                all_records = existing_records + new_records
+                print(f"Combined total: {len(all_records)} records")
+            else:
+                print("No existing file found, creating new one")
+                all_records = new_records
+            
+            # Save all records to JSONL file
+            with open(jsonl_path, 'w', encoding='utf-8') as f:
+                for record in all_records:
+                    f.write(json.dumps(record, ensure_ascii=False) + '\n')
+            
+            print(f"Successfully saved {len(all_records)} records to {jsonl_path}")
+
         return dataset
 
 
